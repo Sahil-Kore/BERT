@@ -9,9 +9,14 @@ class BasicTokenizer:
         self.dir1=Path(dir1)
         self.dir2=Path(dir2)
     
-    def getstats(self):
+    def getstats(self,file=None):
+        all_files=[]
+        if file:
+            file=Path(file)
+            all_files=[file]
+        else:
+            all_files = list(self.dir1.glob("*")) + list(self.dir2.glob("*"))
         stats={}
-        all_files = list(self.dir1.glob("*")) + list(self.dir2.glob("*"))
         for file_path in all_files:
             if file_path.is_file():
                 with open(file_path,"r") as f:
@@ -21,8 +26,14 @@ class BasicTokenizer:
         
         return stats
     
-    def merge(self,pair,idx):
-        all_files = list(self.dir1.glob("*")) + list(self.dir2.glob("*"))
+    def merge(self,pair,idx,file=None):
+        all_files=[]
+        if file:
+            file = Path(file)
+            if file.is_file():
+                all_files = [file]
+        else:
+            all_files = list(self.dir1.glob("*")) + list(self.dir2.glob("*"))
         for file_path in all_files:
             if file_path.is_file():
                 tokens=[]
@@ -52,6 +63,47 @@ class BasicTokenizer:
             vocab[idx]=vocab[int(max_pair[0])]+vocab[int(max_pair[1])]
         self.merges=merges
         self.vocab=vocab
+        
+    
+    def encode(self,dir,output_dir):
+        os.makedirs(output_dir,exist_ok=True)
+        dir=Path(dir)
+        all_files=list(dir.glob("*"))
+        
+        #first encode all files to utf-8
+        for file in all_files:
+            with open(file,"r") as f:
+                content=f.read()
+            utf_encoded=list(content.encode('utf-8'))
+            encoded_string=" ".join(map(str,utf_encoded))
+            output_path=os.path.join(output_dir,file.name)
+            with open(output_path,"w") as f:
+                f.write(encoded_string)
+        
+        #now on the encoded files apply merges according to the merges dictionary
+        output_dir=Path(output_dir)
+        all_files=list(output_dir.glob("*"))
+        
+        for file in all_files:
+            with open(file,"r") as f:
+                content=f.read()
+            
+            while len(content)>=2:
+                stats=self.getstats(file)
+                pair=min(stats,key=lambda p:self.merges.get(p,float('inf')))
+                #no more tokens to merge
+                if pair not in self.merges:
+                    break
+                
+                #merge the token
+                self.merge(pair,self.merges[pair],file=file)
+                with open(file,"r") as f:
+                    content=f.read()
+        
+                
+            
+        
+        
               
 if __name__=="__main__":                
     vocab_size=256
@@ -59,13 +111,14 @@ if __name__=="__main__":
 
     input_dir="../Test/Texts"
     output_dir="./Examples"
+    os.makedirs(output_dir,exist_ok=True)
     input_dir=Path(input_dir)
     files=list(input_dir.glob("*"))
     for file in files:
         with open(file,"r") as f:
             content =f.read()
         utf_encoded=list(content.encode('utf-8'))
-        encoded_string=" ".join(map(str,utf_encoded))
+        encoded_string=" ".join(map(str,utf_encoded))   
         output_path=os.path.join(output_dir,file.name)
         with open(output_path,"w") as f:
             f.write(encoded_string)
@@ -74,4 +127,6 @@ if __name__=="__main__":
     tokenizer=BasicTokenizer("./Examples","./Examples")
     tokenizer.train(num_merges)
     tokenizer.merges
+    tokenizer.encode("./ToEncodeFiles","./EncodedFiles")
     
+        
