@@ -8,6 +8,24 @@ class BasicTokenizer:
     def __init__(self,dir1,dir2):
         self.dir1=Path(dir1)
         self.dir2=Path(dir2)
+        self.max_token=self.get_max_token_id()
+    def get_max_token_id(self):
+        all_files = list(self.dir1.glob("*")) + list(self.dir2.glob("*"))
+        max_token = -1
+    
+        for file in all_files:
+            with open(file, "r") as f:
+                content = f.read().strip()
+                if not content:
+                    continue  # Skip empty files
+                try:
+                    tokens = list(map(int, content.split()))
+                    max_in_file = max(tokens)
+                    max_token = max(max_token, max_in_file)
+                except ValueError:
+                    continue  # Skip files with non-integer content, if any
+    
+        return max_token
     
     def getstats(self,file=None):
         all_files=[]
@@ -51,11 +69,13 @@ class BasicTokenizer:
                     f.write(encoded_string)
     
     def train(self,num_merges):
-        idx=256
+        idx=self.max_token
         merges={}
         vocab={idx:bytes([idx]) for idx in range(256)}
         for i in range(num_merges):
             stats=self.getstats()
+            if  not stats:
+                break
             max_pair=max(stats,key=stats.get)
             idx=256+i
             self.merge(max_pair,idx)
@@ -114,12 +134,6 @@ class BasicTokenizer:
             output_file=os.path.join(output_dir,file.name)
             with open(output_file,"w") as f:
                 f.write(text)
-        
-        
-                
-            
-        
-        
               
 if __name__=="__main__":                
     vocab_size=256

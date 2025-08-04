@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 
 # ── CONFIGURE HERE ────────────────────────────────────────────────
-MBOX_PATH = "../takeout-20250726T213441Z-1-001/Takeout/Mail/Inbox.mbox"
+MBOX_PATH = "../takeout-20250726T213441Z-1-001/Takeout/Mail/Spam.mbox"
 # ─────────────────────────────────────────────────────────────────
 import os
 import mailbox
@@ -90,7 +90,7 @@ def extract_plain_bodies(mbox_path: str, output_dir: str):
 
         clean_body = clean_text(raw_body)
         if clean_body:
-            save_path = os.path.join(output_dir, f"message_{count:05}.txt")
+            save_path = os.path.join(output_dir, f"{output_dir}_{count:05}.txt")
             with open(save_path, "w", encoding="utf-8") as f:
                 f.write(clean_body)
                 
@@ -112,6 +112,6 @@ def delete_short_files(folder_path: str, min_chars: int = 15):
             count+=1
     print(count)
 if __name__ == "__main__":
-    extract_plain_bodies(MBOX_PATH,"Inbox")
+    extract_plain_bodies(MBOX_PATH,"Spam")
     delete_short_files("./Inbox")
 
