@@ -99,6 +99,22 @@ class BasicTokenizer:
                 self.merge(pair,self.merges[pair],file=file)
                 with open(file,"r") as f:
                     content=f.read()
+    
+    def decode(self,input_dir,output_dir):
+        os.makedirs(output_dir,exist_ok=True)
+        input_dir=Path(input_dir)
+        all_files=list(input_dir.glob("*"))
+        
+        for file in all_files:
+            with open(file,"r") as f:
+                content=f.read()
+            tokens=list(map(int,content.strip().split()))
+            text_bytes=b"".join(self.vocab[idx] for idx in tokens)
+            text=text_bytes.decode('utf-8')
+            output_file=os.path.join(output_dir,file.name)
+            with open(output_file,"w") as f:
+                f.write(text)
+        
         
                 
             
@@ -128,5 +144,12 @@ if __name__=="__main__":
     tokenizer.train(num_merges)
     tokenizer.merges
     tokenizer.encode("./ToEncodeFiles","./EncodedFiles")
+    tokenizer.decode("./EncodedFiles","./DecodeFiles")
+    with open("./ToEncodeFiles/message_00001.txt") as f :
+        str1=f.read()
+    with open("./DecodeFiles/message_00001.txt") as f :
+        str2=f.read()
+    str1==str2
+    len(str1),len(str2)
     
         
