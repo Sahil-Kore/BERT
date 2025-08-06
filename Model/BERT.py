@@ -3,6 +3,9 @@ import torch.nn as nn
 from torch.nn import functional as F
 from dataclasses import dataclass
 import math
+from TextDataLoader import EmailDataset,collate_fn
+from torch.utils.data import DataLoader
+
 @dataclass
 class BERT_Config:
     block_size:int=512
@@ -12,6 +15,7 @@ class BERT_Config:
     n_outputs:int=2
     cls_token_id:int=261
     pad_token_id:int=262
+    vocab_size=263
     
 
 class NonCausalAttention(nn.Module):
@@ -78,11 +82,11 @@ class BERT(nn.Module):
             layer_norm=nn.LayerNorm(config.n_embd)
         ))
         
-        self.classifier=nn.Linear(config.n_embd,config.n_ouputs)
+        self.classifier=nn.Linear(config.n_embd,config.n_outputs)
     
     def forward(self,idx,targets=None):
         B,T= idx.size()
-        assert T<self.config.block_size, f"Cannot forward sequence of length {T}"
+        assert T<=self.config.block_size, f"Cannot forward sequence of length {T}"
         pos=torch.arange(0,T,dtype=torch.long,device=idx.device)
         pos_emb=self.transformer.positional_embeddings(pos)
         tok_emb=self.transformer.token_embeddings(idx)
@@ -98,4 +102,11 @@ class BERT(nn.Module):
         if targets is not None:
             loss = F.cross_entropy(logits,targets)
         return logits,loss
+
+
+model=BERT(BERT_Config)
+
+dataset=EmailDataset("../Training Data/Inbox","../Training Data/Spam")
+dataloader= DataLoader(dataset,16,True,collate_fn=collate_fn)
+
 

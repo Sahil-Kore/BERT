@@ -40,5 +40,5 @@ if __name__=='__main__':
     for batch_inputs , batch_labels in loader:
         print(batch_inputs.shape)
         print(batch_labels)
-        
+        break
         
