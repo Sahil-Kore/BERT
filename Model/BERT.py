@@ -25,6 +25,7 @@ class NonCausalAttention(nn.Module):
         
         self.attention=nn.Linear(config.n_embd,3 * config.n_embd)
         self.projection=nn.Linear(config.n_embd,config.n_embd)
+        self.projection.SCALE_INIT=1
         self.n_head=config.n_head
         self.n_embd=config.n_embd
     
@@ -38,9 +39,7 @@ class NonCausalAttention(nn.Module):
         q=q.view(B,T,self.n_head,C//self.n_head).transpose(1,2)
         v=v.view(B,T,self.n_head,C//self.n_head).transpose(1,2)
         
-        att= q @ k.transpose(-2,-1) * (1.0/math.sqrt(k.size(-1)))
-        att=F.softmax(att,dim=-1)
-        y= att @ v
+        y=F.scaled_dot_product_attention(q,k,v,is_causal=False)
         y=y.transpose(1,2).contiguous().view(B,T,C)
         y=self.projection(y)
         return y
@@ -51,6 +50,7 @@ class FeedForwardNN(nn.Module):
         self.classifier = nn.Linear(config.n_embd, 4* config.n_embd)
         self.gelu=nn.GELU()
         self.projection=nn.Linear(config.n_embd * 4,config.n_embd)
+        self.projection.SCALE_INIT=1
     
     def forward(self,x):
         x=self.classifier(x)
@@ -83,6 +83,20 @@ class BERT(nn.Module):
         ))
         
         self.classifier=nn.Linear(config.n_embd,config.n_outputs)
+        self.apply(self.init_weights)
+    
+    def init_weights(self,module):
+        if isinstance(module,nn.Linear):
+            std=0.02
+            if hasattr(module, 'SCALE_INIT'):
+                std*=(2* self.config.n_layer)** -0.5
+            torch.nn.init.normal_(module.weight, mean=0.0, std=std)
+            
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+            
+        elif isinstance(module, nn.Embedding):
+                torch.nn.init.normal_(module.weight,mean=0.0,std=0.02)
     
     def forward(self,idx,targets=None):
         B,T= idx.size()
@@ -109,4 +123,24 @@ model=BERT(BERT_Config)
 dataset=EmailDataset("../Training Data/Inbox","../Training Data/Spam")
 dataloader= DataLoader(dataset,16,True,collate_fn=collate_fn)
 
+for inputs,labels in dataloader:
+    outputs,loss=model(inputs,labels)
+    print(loss)
+    break
+    
+device="cuda"
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
 
+import time
+model=model.to(device)
+for i in range(10):
+    t0=time.time()
+    x,y= next(iter(dataloader))
+    x,y=x.to(device),y.to(device)
+    optimizer.zero_grad()
+    logits,loss = model(x,y)
+    loss.backward()
+    optimizer.step()
+    torch.cuda.synchronize()
+    t1=time.time()
+    print(f"Loss is {loss} time :{t1-t0} ")
