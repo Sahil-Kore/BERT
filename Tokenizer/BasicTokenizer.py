@@ -1,14 +1,19 @@
 import os
 from pathlib import Path
+
+#the basictokenizer class expects the data to files to encoded as utf-8 already
+#it iteratively merges the tokens and stores the new data in the original files itself
+#the constructor takes two arguments a inbox directory and a spam directory
 class BasicTokenizer:
-    #stores the tokens merged as keys and the minted new token as values
-    merges={}
-    #stores the unicode point o fthe token and its byte representation if the token is minted it stores the parent tokens as a list
-    vocab={}
+
     def __init__(self,dir1,dir2):
         self.dir1=Path(dir1)
         self.dir2=Path(dir2)
         self.max_token=self.get_max_token_id()
+        #stores the tokens merged as keys and the minted new token as values
+        self.merges={}
+        #stores the unicode point o fthe token and its byte representation if the token is minted it stores the parent tokens as a list
+        self.vocab={}
     def get_max_token_id(self):
         all_files = list(self.dir1.glob("*")) + list(self.dir2.glob("*"))
         max_token = -1
@@ -69,20 +74,20 @@ class BasicTokenizer:
                     f.write(encoded_string)
     
     def train(self,num_merges):
-        idx=self.max_token
+        idx=max(255,self.max_token)
         merges={}
-        vocab={idx:bytes([idx]) for idx in range(256)}
+        self.vocab={idx:bytes([idx]) for idx in range(256)}
         for i in range(num_merges):
+            idx+=1
             stats=self.getstats()
             if  not stats:
                 break
             max_pair=max(stats,key=stats.get)
-            idx=256+i
             self.merge(max_pair,idx)
             merges[max_pair]=idx
-            vocab[idx]=vocab[int(max_pair[0])]+vocab[int(max_pair[1])]
+            self.vocab[idx]=self.vocab[int(max_pair[0])]+self.vocab[int(max_pair[1])]
+            print(i)
         self.merges=merges
-        self.vocab=vocab
         
     
     def encode(self,dir,output_dir):
@@ -91,6 +96,7 @@ class BasicTokenizer:
         all_files=list(dir.glob("*"))
         
         #first encode all files to utf-8
+        i=0
         for file in all_files:
             with open(file,"r") as f:
                 content=f.read()
@@ -99,8 +105,11 @@ class BasicTokenizer:
             output_path=os.path.join(output_dir,file.name)
             with open(output_path,"w") as f:
                 f.write(encoded_string)
+            print(i)
+            i+=1
         
         #now on the encoded files apply merges according to the merges dictionary
+        i=0
         output_dir=Path(output_dir)
         all_files=list(output_dir.glob("*"))
         
@@ -119,6 +128,8 @@ class BasicTokenizer:
                 self.merge(pair,self.merges[pair],file=file)
                 with open(file,"r") as f:
                     content=f.read()
+            print(i)
+            i+=1
     
     def decode(self,input_dir,output_dir):
         os.makedirs(output_dir,exist_ok=True)
