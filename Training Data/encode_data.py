@@ -1,12 +1,13 @@
-import os
+import sys
+import os 
 os.chdir("../")
-os.getcwd()
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from Tokenizer.BasicTokenizer import BasicTokenizer
 from pathlib import Path
 
 def add_pad_cls(dir1=None,dir2=None,file=None):
-    cls_id='261'
-    pad_id='262'
+    cls_id='2046'
+    pad_id='2047'
     all_files=[]
     if file:
         all_files=[file]
@@ -42,7 +43,6 @@ inbox_output_dir="./Training Data/Inbox"
 spam_output_dir="./Training Data/Spam"
 
 
-
 inbox_files=list(dir1.glob('*'))
 for file in inbox_files:
     with open(file,"r") as f:
@@ -64,7 +64,7 @@ for file in spam_files:
         f.write(encoded_string)     
 
 tokenizer=BasicTokenizer("./Training Data/Inbox","./Training Data/Spam")
-tokenizer.train(5)
+tokenizer.train(num_merges=1790)
 tokenizer.encode("./Data Extraction/Inbox","./Training Data/Inbox")
 tokenizer.encode("./Data Extraction/Spam","./Training Data/Spam")
 os.chdir("./Training Data")
@@ -72,16 +72,17 @@ import pickle
 with open ("tokenizer.pkl" ,"wb") as f:
     pickle.dump(tokenizer,f)
     
-
-with open ("tokenizer.pkl" ,"rb") as f:
+import pickle
+with open ("./Training Data/tokenizer.pkl" ,"rb") as f:
     tok1=pickle.load(f)
-
 
 #adding padding and cls token
 #max_token is 260
-add_pad_cls("./Training Data/Inbox","./Training Data/Spam")
+add_pad_cls("./Inbox","./Spam")
 for file in Path("./Inbox").glob('*'):
     with open(file,"r") as f:
         tokens=f.read().strip().split()
     if len(tokens) !=512:
         print(f"{f.name} {len(tokens)}")
+        
+        

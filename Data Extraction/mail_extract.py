@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 
 # ── CONFIGURE HERE ────────────────────────────────────────────────
-MBOX_PATH = "../takeout-20250726T213441Z-1-001/Takeout/Mail/Spam.mbox"
+MBOX_PATH = "./Takeout/Mail/Spam.mbox"
 # ─────────────────────────────────────────────────────────────────
 import os
 import mailbox
@@ -113,5 +113,5 @@ def delete_short_files(folder_path: str, min_chars: int = 15):
     print(count)
 if __name__ == "__main__":
     extract_plain_bodies(MBOX_PATH,"Spam")
-    delete_short_files("./Inbox")
+    delete_short_files("./Spam")
 

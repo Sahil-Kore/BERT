@@ -13,10 +13,10 @@ class BERT_Config:
     n_head:int=12
     n_embd:int=768 
     n_outputs:int=2
-    cls_token_id:int=261
-    pad_token_id:int=262
-    vocab_size=263
-    
+    cls_token_id:int=2046
+    pad_token_id:int=2047
+    vocab_size=2048
+
 
 class NonCausalAttention(nn.Module):
     def __init__(self,config):
@@ -133,6 +133,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
 
 import time
 model=model.to(device)
+
 for i in range(10):
     t0=time.time()
     x,y= next(iter(dataloader))
@@ -143,4 +144,4 @@ for i in range(10):
     optimizer.step()
     torch.cuda.synchronize()
     t1=time.time()
-    print(f"Loss is {loss} time :{t1-t0} ")
+    print(f"Loss is {loss:.4f} time :{t1-t0} ")

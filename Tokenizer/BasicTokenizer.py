@@ -148,7 +148,8 @@ class BasicTokenizer:
               
 if __name__=="__main__":                
     vocab_size=256
-    num_merges=64
+    num_merges=1790
+    #1790 +256 +2( special tokens) =2048
 
     input_dir="../Test/Texts"
     output_dir="./Examples"
