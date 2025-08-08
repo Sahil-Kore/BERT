@@ -5,3 +5,4 @@ Test
 Tokenizer/*/
 Training Data/*/
 Training Data/tokenizer.pkl
+Model/*/
