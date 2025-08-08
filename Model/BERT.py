@@ -261,3 +261,41 @@ torch.save({
         'config':BERT_Config().__dict__
         }, model_save_path)
 print(f"Model saved to {model_save_path}")
+
+
+#making a prediction 
+with open("../Training Data/Inbox/Inbox_00001.txt","r") as f:
+    tokens=f.read().split()
+    
+tokens=list(map(int,tokens))
+tokens
+
+tokens=torch.tensor(tokens)
+
+tokens=tokens.to(device)
+prediction=model(tokens.unsqueeze(0))
+type(prediction[0])
+idx=torch.argmax(prediction[0],dim=-1)
+
+num_to_class={
+    0:"Inbox",
+    1:"Spam"
+}
+num_to_class[idx.item()]
+
+with open("../Training Data/Spam/Spam_00032.txt","r") as f:
+    tokens=f.read().split()
+    
+tokens=list(map(int,tokens))
+tokens
+
+tokens=torch.tensor(tokens)
+
+tokens=tokens.to(device)
+prediction=model(tokens.unsqueeze(0))
+type(prediction[0])
+idx=torch.argmax(prediction[0],dim=-1)
+num_to_class[idx.item()]
+
+
+    
