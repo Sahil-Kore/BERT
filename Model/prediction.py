@@ -1,37 +1,17 @@
+import os
+os.chdir("../")
+
+from Tokenizer.BasicTokenizer import BasicTokenizer
+import pickle
 import torch
 import torch.nn as nn
-import os
+from torch.nn import functional as F
 from dataclasses import dataclass
-import torch.nn.functional as F
-from pathlib import Path
-
-
-def add_pad_cls(dir1=None,dir2=None,file=None):
-    cls_id='2046'
-    pad_id='2047'
-    all_files=[]
-    if file:
-        all_files=[file]
-    else:
-        dir1=Path(dir1)
-        dir2=Path(dir2)
-        
-        all_files=list(dir1.glob('*')) +list(dir2.glob('*'))
-    
-    for file in all_files:
-        with open(file ,"r") as f:
-            tokens=f.read().split()
-        zero_index=tokens[0]
-        tokens = [cls_id,zero_index]+tokens[1:]
-        if len(tokens)>512:
-            tokens=tokens[:512]
-        elif len(tokens)<512:
-            n_pad=512-len(tokens)
-            tokens=tokens + [pad_id]*n_pad
-        
-        #save file
-        with open(file,"w") as f:
-            f.write(" ".join(tokens))
+from Model.TextDataLoader import EmailDataset,collate_fn
+from torch.utils.data import DataLoader
+import random
+from torch.utils.data import Dataset,random_split
+import math
 
 @dataclass
 class BERT_Config:
@@ -148,40 +128,29 @@ class BERT(nn.Module):
             loss = F.cross_entropy(logits,targets)
         return logits,loss
 
-example='''Time to level up your sound game 
-Introducing the ULTIMATE combo for every mood –
-Tempt Juggler Speaker + Groove Neckband, now at a crazy ZEPP price!
+with open("./Training_Data/tokenizer.pkl" , "rb") as f:
+    tokenizer= pickle.load(f)
 
 
-Tempt delivers bold, bass-heavy audio and clever features like detachable earbuds and RGB lighting—all at unbeatable value. Loved by thousands and backed by solid reviews, it’s the ultimate upgrade for less. Grab your Tempt combo now at an insane price drop!'''
-os.chdir("../")
-model = BERT(BERT_Config)
-os.getcwd()
+
+example='''You have been selected as the lucky winner of our annual lottery! To claim your prize, please provide your banking information'''
+
+inputs=tokenizer.encode_text(example)
+model=BERT(BERT_Config)
+
 checkpoint=torch.load("./Model/Models/BERT2.pt")
-raw_state_dict = checkpoint['model_state_dict']
-cleaned_state_dict = {k.replace('_orig_mod.', ''): v for k, v in raw_state_dict.items()}
-model.load_state_dict(cleaned_state_dict)
+state_dict=checkpoint['model_state_dict']
 
-from Tokenizer.BasicTokenizer import BasicTokenizer
-import pickle
+from collections import OrderedDict
 
-with open("./Training Data/tokenizer.pkl","rb") as f:
-    tokenizer=pickle.load(f)
-    
+new_state_dict=OrderedDict()
 
-with open("./Model/example.txt","r") as f:
-    content=f.read()
+for k,v in state_dict.items():
+    new_key= k.replace("_orig_mod.","")
+    new_state_dict[new_key]=v
+model.load_state_dict(state_dict=new_state_dict)
 
-encoded_data=list(content.encode('utf-8'))
-encoded_data
-encoded_string=" ".join(map(str,encoded_data))
-with open("./Model/encoded_ex.txt","w") as f:
-    f.write(encoded_string)   
-
-os.chdir("./BERT")
-add_pad_cls(file="./Model/encoded_ex.txt")
-
-
-with open("./Model/encoded_ex.txt","r") as f:
-    tokens=list(map(int,f.read().split()))
-    
+inputs=torch.tensor(inputs)
+inputs.size()
+prediction=model(inputs.unsqueeze(0))
+prediction

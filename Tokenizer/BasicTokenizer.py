@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import io
 #the basictokenizer class expects the data to files to encoded as utf-8 already
 #it iteratively merges the tokens and stores the new data in the original files itself
 #the constructor takes two arguments a inbox directory and a spam directory
@@ -146,6 +146,51 @@ class BasicTokenizer:
             with open(output_file,"w") as f:
                 f.write(text)
               
+    def encode_text(self, input: str):
+        # Step 1: Encode string to UTF-8 byte tokens (0–255)
+        utf_encoded = list(input.encode('utf-8'))
+        tokens = list(map(str, utf_encoded))
+
+        # Step 2: Apply merges according to self.merges
+        tokens = list(map(int, tokens))
+
+        while len(tokens) >= 2:
+            # Get pair frequencies
+            stats = {}
+            for pair in zip(tokens, tokens[1:]):
+                stats[pair] = stats.get(pair, 0) + 1
+
+            if not stats:
+                break
+
+            # Find the pair with smallest merge index (order of creation)
+            pair = min(stats, key=lambda p: self.merges.get(p, float('inf')))
+
+            # No more pairs to merge
+            if pair not in self.merges:
+                break
+
+            # Merge in place
+            i = 0
+            while i < len(tokens) - 1:
+                if (tokens[i], tokens[i+1]) == pair:
+                    tokens[i:i+2] = [self.merges[pair]]
+                else:
+                    i += 1
+
+        # Step 3: Enforce fixed length of 512
+        max_len = 512
+        pad_token = 2047
+
+        if len(tokens) > max_len:
+            tokens = tokens[:max_len]  # Truncate
+        elif len(tokens) < max_len:
+            tokens += [pad_token] * (max_len - len(tokens))  # Pad
+
+        return tokens
+
+
+        
 if __name__=="__main__":                
     vocab_size=256
     num_merges=1790
