@@ -166,7 +166,7 @@ def get_lr(it):
 # Model setup
 torch.cuda.empty_cache()
 model = BERT(BERT_Config)
-device = "cuda"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 model = model.to(device)
 model = torch.compile(model)
 

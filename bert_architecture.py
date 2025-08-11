@@ -1,8 +1,3 @@
-import os
-os.chdir("../")
-
-from Tokenizer.BasicTokenizer import BasicTokenizer
-import pickle
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -127,33 +122,3 @@ class BERT(nn.Module):
         if targets is not None:
             loss = F.cross_entropy(logits,targets)
         return logits,loss
-
-with open("./Training_Data/tokenizer.pkl" , "rb") as f:
-    tokenizer= pickle.load(f)
-
-
-
-example='''Your college is close to out neighbourhood please look at it'''
-
-inputs=tokenizer.encode_text(example)
-model=BERT(BERT_Config)
-
-checkpoint=torch.load("./Model/Models/BERT2.pt",map_location=torch.device("cpu"))
-state_dict=checkpoint['model_state_dict']
-
-from collections import OrderedDict
-
-new_state_dict=OrderedDict()
-
-for k,v in state_dict.items():
-    new_key= k.replace("_orig_mod.","")
-    new_state_dict[new_key]=v
-model.load_state_dict(state_dict=new_state_dict)
-
-model.eval()
-with torch.inference_mode():
-    inputs=torch.tensor(inputs)
-    inputs.size()
-    prediction,_=model(inputs.unsqueeze(0))
-    print(prediction)
-    print(prediction[0].argmax(0))
