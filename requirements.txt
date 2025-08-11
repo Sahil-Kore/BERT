@@ -46,3 +46,4 @@ tzdata==2025.2
 wcwidth==0.2.13
 uvicorn
 fastapi
+gdown

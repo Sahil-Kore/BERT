@@ -6,3 +6,4 @@ Tokenizer/*/
 Training Data/*/
 Training Data/tokenizer.pkl
 Model/*/
+Model/Model.pt

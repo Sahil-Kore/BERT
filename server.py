@@ -3,6 +3,8 @@ import pickle
 import torch
 from bert_architecture import BERT,BERT_Config
 from Tokenizer.BasicTokenizer import BasicTokenizer
+import os
+import gdown
 
 model=BERT(BERT_Config)
 
@@ -10,6 +12,20 @@ idx_to_class={
     0: "Inbox",
     1: "Spam"
 }
+#load the model and tokenizer from drive
+#convert the link https://drive.google.com/file/d/1l3tyFlNDtYXJYRmMRV8bPcIrrhdbZJeK/view?usp=drive_link to the below form
+
+model_path="./Model/Models/BERT2.pt"
+os.makedirs(os.path.dirname(model_path) , exist_ok=True)
+if not os.path.exists(model_path):
+    url = "https://drive.google.com/uc?export=download&id=1FSJrK-457QVoErlni_SiJLXcCcrbboGI"
+    gdown.download(url , model_path , quiet=False)
+
+tokenizer_path="./Training_Data/tokenizer.pkl"
+os.makedirs(os.path.dirname(tokenizer_path) , exist_ok=True)
+if not os.path.exists(tokenizer_path):
+    url = "https://drive.google.com/uc?export=download&id=1l3tyFlNDtYXJYRmMRV8bPcIrrhdbZJeK"
+    gdown.download(url , tokenizer_path , quiet=False)
 
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
 checkpoint=torch.load("./Model/Models/BERT2.pt",map_location=device)
