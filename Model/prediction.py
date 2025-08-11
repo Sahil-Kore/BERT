@@ -157,3 +157,13 @@ with torch.inference_mode():
     prediction,_=model(inputs.unsqueeze(0))
     print(prediction)
     print(prediction[0].argmax(0))
+    
+    
+import requests 
+import json
+
+data = {"input_str" : "This is a normal inbox email"}
+url= "https://bert-jdbw.onrender.com/predict"
+data = json.dumps(data)
+response = requests.post(url,json = data)
+print(response.json())

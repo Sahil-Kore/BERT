@@ -50,8 +50,9 @@ def reed_root():
     return {'message' : 'BERT model'}
 
 @app.post('/predict')
-def predict(data:str):
-    tokens = tokenizer.encode_text(data)
+def predict(data:dict):
+    input_str=data["input_str"]
+    tokens = tokenizer.encode_text(input_str)
     tokens=torch.tensor(tokens).to(device)
     model.eval()
     with torch.inference_mode():
