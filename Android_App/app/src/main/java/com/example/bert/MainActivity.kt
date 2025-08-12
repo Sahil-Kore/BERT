@@ -37,15 +37,12 @@ class MainActivity : ComponentActivity() {
 				var resultString by remember { mutableStateOf("") }
 				Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 					Column (modifier = Modifier.padding(innerPadding)){
-						Row {
 							TextField(value=inputString, onValueChange = {
 								inputString =it
 							})
 							Button(onClick ={triggerButton=!triggerButton} ){
 								Text("Predict")
 							}
-
-						}
 						if(resultString!="") {
 							Text("Result is $resultString")
 						}
