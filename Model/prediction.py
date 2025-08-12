@@ -165,5 +165,5 @@ import json
 data = {"input_str" : "This is a normal inbox email"}
 url= "https://bert-jdbw.onrender.com/predict"
 data = json.dumps(data)
-response = requests.post(url,json = data)
+response = requests.post(url,data)
 print(response.json())

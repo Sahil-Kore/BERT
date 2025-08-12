@@ -59,4 +59,4 @@ def predict(data:dict):
         prediction, _ = model(tokens.unsqueeze(0))
     prediction = prediction[0].argmax(0)
     prediction= idx_to_class[prediction.item()]
-    return {'Prediction_class ' :  prediction}
+    return {'Prediction_class' :  prediction}
